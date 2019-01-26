@@ -3,7 +3,7 @@ import zulip
 import sys
 import re
 import json
- 
+from weather import Weather 
 import httplib2
 import os
 from apiclient import discovery
@@ -15,6 +15,7 @@ from chatterbot import ChatBot
 from translate import Translate
 from twitter import Twimega
 from pnr import Pnr
+from geocode import Geocode
 p = pprint.PrettyPrinter()
 BOT_MAIL = "myra-bot@saharsh.zulipchat.com"
 
@@ -25,6 +26,8 @@ class ZulipBot(object):
 		self.trans = Translate()
 		self.tw = Twimega()
 		self.pnr = Pnr()
+		self.weather = Weather()
+		self.geo = Geocode()
 						
 		print("Initialization Done ...")
 		self.subkeys = ["crypto", "translate", "define", "joke", "weather", 
@@ -116,6 +119,20 @@ class ZulipBot(object):
 							"to": sender_email,
 							"content": message
 							})
+
+			if content[1].lower() == "weather":
+				place = " ".join(content[2:])
+				try:
+					result = self.weather.getWeather(self.geo.convert(place))
+					message = "**"+"Weather update of "+place+"**"+"\n"+"Summary : " + "**"+result["currently"]["summary"]+"**"+"\n"+"Temparature : " +"**"+ str(result["currently"]["temperature"])+"**" +'\n'+"Apparent Temparature : "+"**"+str(result["currently"]["apparentTemperature"])+"**"+"\n"+"Dew Point : "+"**"+str(result["currently"]["dewPoint"])+"**"+"\n"+"Humidity : "+"**"+str(result["currently"]["humidity"])+"**"			
+				except KeyError:
+					message = "Not Working Right Now"
+				self.client.send_message({
+					"type": "stream",
+					"subject": msg["subject"],
+					"to": msg["display_recipient"],
+					"content": message  
+				})
 					
 			if content[1] not in self.subkeys:
 				ip = content[1:]
@@ -147,5 +164,5 @@ if __name__ == "__main__":
 	try:
 		main()
 	except KeyboardInterrupt:
-		print("Thanks for using myra Bot. Bye!")
+		print("Thanks for using ninja33bot Bot. Bye!")
 		sys.exit(0)
