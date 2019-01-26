@@ -48,14 +48,8 @@ class ZulipBot(object):
 		ttype = msg["type"]
 		stream_name = msg['display_recipient']
 		stream_topic = msg['subject']
-
-		print(content)
-
 		if sender_email == BOT_MAIL:
 			return 
-
-		print("Sucessfully heard.")
-
 		if content[0].lower() == "ninjas33" or content[0] == "@**ninjas33**":
 			if content[1].lower() == "translate":
 				ip = content[2:]
