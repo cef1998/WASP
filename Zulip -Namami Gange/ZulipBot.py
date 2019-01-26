@@ -3,7 +3,6 @@ import zulip
 import sys
 import re
 import json
-from weather import Weather 
 import httplib2
 import os
 from apiclient import discovery
@@ -14,8 +13,11 @@ from apiclient.http import MediaFileUpload
 from chatterbot import ChatBot
 from translate import Translate
 from twitter import Twimega
-from pnr import Pnr
 from geocode import Geocode
+from weather import Weather 
+from places import Places
+from pnr import Pnr
+from help import Help
 p = pprint.PrettyPrinter()
 BOT_MAIL = "myra-bot@saharsh.zulipchat.com"
 
@@ -28,11 +30,12 @@ class ZulipBot(object):
 		self.pnr = Pnr()
 		self.weather = Weather()
 		self.geo = Geocode()
+		self.searching = Places()
+		self.help = Help()
 						
 		print("Initialization Done ...")
-		self.subkeys = ["crypto", "translate", "define", "joke", "weather", 
-				"giphy", "pnr", "mustread", "poll", "hackernews", "hn", "HN", "motivate",
-				"twitter", "screenshot", "memo", "cricnews", "help", "shorturl"]
+		self.subkeys = ["translate", "weather","pnr","post","post_image",
+				"twitter", "help","search"]
 
 	def subscribe_all(self):
 		json = self.client.get_streams()["streams"]
@@ -120,6 +123,15 @@ class ZulipBot(object):
 							"content": message
 							})
 
+			if content[1].lower() == "help" and len(content) == 2:
+				message = self.help.get_help();
+				self.client.send_message({
+					"type": "stream",
+					"subject": msg["subject"],
+					"to": msg["display_recipient"],
+					"content": message  
+					})
+
 			if content[1].lower() == "weather":
 				place = " ".join(content[2:])
 				try:
@@ -133,6 +145,25 @@ class ZulipBot(object):
 					"to": msg["display_recipient"],
 					"content": message  
 				})
+
+			if content[1].lower() == "search":
+				place = " ".join(content[2:])
+				try:
+					result = self.searching.getPlaces(place)
+					y = result['results']
+					message = "Result for search \n"
+					#print(result)
+					for i in range(len(y)): 
+						message += str(i+1) + ". " +  y[i]['name'] +  " , Rating:" + str(y[i]['rating']) + " \n Address : " + y[i]['formatted_address']
+						message += "\n"		
+				except KeyError:
+					message = "Not Working Right Now"
+				self.client.send_message({
+					"type": "stream",
+					"subject": msg["subject"],
+					"to": msg["display_recipient"],
+					"content": message  
+				})	
 					
 			if content[1] not in self.subkeys:
 				ip = content[1:]
