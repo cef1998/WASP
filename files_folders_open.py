@@ -1,5 +1,8 @@
 import os
 import subprocess
+import organizebytype as oft
+
+is_open = 0
 si = subprocess.STARTUPINFO()
 si.dwFlags |= subprocess.STARTF_USESHOWWINDOW
 path = os.getcwd()
@@ -48,10 +51,87 @@ def close_current_folder():
         st = 'start /MAX "" "'+par_path+'"'
         subprocess.Popen(st, startupinfo=si,shell=True).wait()
         path = par_path
-        print(path)
     except OSError:
         print("File Not Found !!")
 
 def close_current_file(fileName):
+    global path,par_path
     st = 'taskkill /FI "WINDOWTITLE eq '+fileName+'*'
     subprocess.Popen(st, startupinfo=si,shell=True).wait()
+    par_path = os.path.abspath(os.path.join(path,os.pardir))
+    path = par_path
+
+def opening(li):
+    global is_open,fil_name,path,par_path
+    stri = ""
+    open_flag = 0
+    file_flag = 0
+    drive_flag =  0
+    folder_flag = 0
+    str = " ".join(li)
+    for st in li:
+        if st=="open":
+            open_flag = 1
+        elif st=="drive":
+            drive_flag = 1
+            stri = li[1]
+        elif st=="folder":
+            folder_flag = 1
+        elif st=="file":
+            file_flag=1
+                
+        if len(li) == 0:
+            print("Invalid command")
+            break
+        elif(open_flag==1 and drive_flag==1):
+            open_drive(stri)
+            break
+        elif(open_flag==1 and folder_flag==1):
+            li = li[2:]
+            li = "".join(li).lower()
+            file_list = os.listdir(path)
+            nw_li=[]
+            for i in file_list:
+                tmp = i.split(" ")
+                nw_li.append("".join(tmp).lower())
+            if li in nw_li:
+                stri = file_list[nw_li.index(li)]
+            else :
+                break
+            open_folder(stri)
+            break
+        elif(open_flag==1 and file_flag==1):
+            sz = len(li)
+            li_n = li[2:sz-1]
+            li_n = "".join(li_n).lower()
+            li_n+='.'
+            li_n+=li[-1]
+            li_n = li_n.lower()
+            file_list = os.listdir(path)
+            nw_li=[]
+            for i in file_list:
+                tmp = i.split(" ")
+                nw_li.append("".join(tmp).lower())
+            if li_n in nw_li:
+                stri = file_list[nw_li.index(li_n)]
+            else :
+                break
+            open_file(stri)
+            fil_name = stri
+            is_open=1
+            break
+        elif(str == "organize" or str == "organised"):
+            oft.organize(path)
+            break
+        elif (str == "go back"):
+            close_current_folder()
+            break
+        elif (str == "close") and is_open==0:
+            close_this()
+            break
+        elif (str == "close") and is_open==1:
+            print(fil_name)
+            is_open=0
+            close_current_file(fil_name)
+        else:
+            continue
