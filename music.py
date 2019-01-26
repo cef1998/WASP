@@ -6,8 +6,8 @@ import time
 import speech_recognition as sr
 
 r = sr.Recognizer()
-r.energy_threshold=1000
-r.operation_timeout = 5
+r.energy_threshold=2000
+r.operation_timeout = 2
 st="next"
 
 def listenn():
@@ -39,6 +39,8 @@ def listenn():
             print("Google Speech Recognition could not understand audio")
         except sr.RequestError as e:
             print("Could not request results from Google Speech Recognition service; {0}".format(e))
+        except sr.TimeoutError as e:
+            print("TimeOut Error !!")
     return
 
 state = 1
@@ -90,7 +92,6 @@ def play_music(stir):
                 st="play"
                 
             listenn()
-            print(st+" inside play")
             if st=="play" and state==0:
                 state=1
                 click()
@@ -125,7 +126,7 @@ def play_music(stir):
                 browser.find_element_by_css_selector('.sc-button-play.playButton.sc-button.m-stretch').click()
                 state=1
                 
-            st = input()
+            listenn()
             if st=="play" and state==0:
                 state=1
                 click()
@@ -158,7 +159,7 @@ def play_music(stir):
                 browser.find_element_by_css_selector('.sc-button-play.playButton.sc-button.m-stretch').click()
                 state=1
     
-            st = input()
+            listenn()
             if st=="play" and state==0:
                 state=1
                 click()
@@ -191,7 +192,7 @@ def play_music(stir):
                 browser.get("http://soundcloud.com" + track_links[choice])
                 browser.find_element_by_css_selector('.sc-button-play.playButton.sc-button.m-stretch').click()
                 state=1
-            st = input()
+            listenn()
             if st=="play" and state==0:
                 state=1
                 click()
